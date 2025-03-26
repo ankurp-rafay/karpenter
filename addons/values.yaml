@@ -1,5 +1,5 @@
 serviceAccount:
-  create: false
+  create: true
   name: "karpenter"
 replicas: 2
 controller:
