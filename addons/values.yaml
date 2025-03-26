@@ -1,0 +1,12 @@
+serviceAccount:
+  create: false
+  name: "karpenter"
+replicas: 2
+controller:
+  env:
+  - name: AWS_REGION
+    value: {{{ .global.Rafay.ClusterLabels.region }}}
+settings:
+  clusterName: {{{ .global.Rafay.ClusterName }}}
+  featureGates:
+    spotToSpotConsolidation: false
