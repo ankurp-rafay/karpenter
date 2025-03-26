@@ -1,0 +1,63 @@
+---
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: custom-apps
+spec:
+  template:
+    metadata:
+      labels:
+        node-role: custom-apps
+    spec:
+      taints:
+      - effect: NoSchedule
+        key: dedicated
+        value: custom-apps
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot"]
+        - key: karpenter.k8s.aws/instance-category
+          operator: In
+          values: ["t"]
+        - key: karpenter.k8s.aws/instance-generation
+          operator: Gt
+          values: ["2"]
+        - key: karpenter.k8s.aws/instance-size
+          operator: In
+          values: ["medium", "large", "xlarge"]
+      nodeClassRef:
+        apiVersion: karpenter.k8s.aws/v1beta1
+        kind: EC2NodeClass
+        name: custom-apps
+  limits:
+    cpu: 100
+  disruption:
+    consolidationPolicy: WhenUnderutilized
+    expireAfter: 720h # 30 * 24h = 720h
+---
+apiVersion: karpenter.k8s.aws/v1beta1
+kind: EC2NodeClass
+metadata:
+  name: custom-apps
+spec:
+  tags:
+    email: hardik@rafay.co
+    env: qa
+  amiFamily: AL2
+  amiSelectorTerms: 
+  - id: ami-040baaa7a5129e7f3
+  role: "hardik-vpc-eks-ng-role"
+  subnetSelectorTerms:
+    - tags:
+       kubernetes.io/cluster/{{{ .global.Rafay.ClusterName }}}: "*"
+       kubernetes.io/role/internal-elb: "*"
+  securityGroupSelectorTerms:
+    - tags:
+       kubernetes.io/cluster/{{{ .global.Rafay.ClusterName }}}: "*"
